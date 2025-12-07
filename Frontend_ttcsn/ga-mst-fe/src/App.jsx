@@ -1,18 +1,20 @@
 import { useState } from "react";
 import "./App.css";
+import { runGa, getHistory } from "./services/gaService";
+import MstGraph from "./MstGraph";
 
 function App() {
-  // Cấu hình GA (để dạng string cho phép nhập 0,8 / 0.8)
+  // Cấu hình GA
   const [populationSize, setPopulationSize] = useState("50");
   const [maxGenerations, setMaxGenerations] = useState("200");
   const [crossoverRate, setCrossoverRate] = useState("0.8");
   const [mutationRate, setMutationRate] = useState("0.1");
   const [vertexCount, setVertexCount] = useState("5");
 
-  // Cách đánh số đỉnh: 0-based hay 1-based
-  const [indexing, setIndexing] = useState("zero"); // "zero" hoặc "one"
+  // Đánh số đỉnh: 0-based hay 1-based
+  const [indexing, setIndexing] = useState("zero"); // "zero" | "one"
 
-  // Dữ liệu cạnh – user có thể sửa tuỳ ý
+  // Dữ liệu cạnh
   const [edgesInput, setEdgesInput] = useState(
     `0 1 2
 0 2 3
@@ -22,13 +24,19 @@ function App() {
 3 4 2`
   );
 
-  // Trạng thái kết quả + lỗi
+  // Kết quả + lỗi
   const [result, setResult] = useState(null);
+  const [lastRunId, setLastRunId] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Lịch sử chạy thuật toán
+  const [historyVisible, setHistoryVisible] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+
   // ========= HÀM TIỆN ÍCH =========
-  // Chuẩn hoá số (hỗ trợ "0,8" hoặc "0.8")
   const parseNumber = (value, fieldName, options = {}) => {
     const normalized = String(value).replace(",", ".").trim();
     if (normalized === "") {
@@ -50,7 +58,7 @@ function App() {
     return num;
   };
 
-  // Parse dữ liệu cạnh từ textarea → edges cho BACKEND
+  // Parse dữ liệu cạnh
   const parseEdgesForBackend = (text, vCount, indexingMode) => {
     const lines = text
       .split("\n")
@@ -85,22 +93,22 @@ function App() {
       }
 
       if (indexingMode === "zero") {
-        // Đỉnh 0..vertexCount-1
         if (uRaw < 0 || vRaw < 0 || uRaw >= vCount || vRaw >= vCount) {
           return {
             edges: null,
-            error: `Dòng ${i + 1}: u, v phải nằm trong khoảng [0, ${
-              vCount - 1
-            }].`,
+            error: `Dòng ${
+              i + 1
+            }: u, v phải nằm trong khoảng [0, ${vCount - 1}].`,
           };
         }
         edgesForBackend.push({ u: uRaw, v: vRaw, weight: w });
       } else {
-        // Đỉnh 1..vertexCount, FE tự trừ 1 cho backend
         if (uRaw < 1 || vRaw < 1 || uRaw > vCount || vRaw > vCount) {
           return {
             edges: null,
-            error: `Dòng ${i + 1}: u, v phải nằm trong khoảng [1, ${vCount}].`,
+            error: `Dòng ${
+              i + 1
+            }: u, v phải nằm trong khoảng [1, ${vCount}].`,
           };
         }
         edgesForBackend.push({ u: uRaw - 1, v: vRaw - 1, weight: w });
@@ -108,6 +116,30 @@ function App() {
     }
 
     return { edges: edgesForBackend, error: null };
+  };
+
+  // ========= LỊCH SỬ =========
+  const fetchHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      setHistoryError("");
+      const data = await getHistory();
+      setHistory(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setHistoryError(err.message || "Đã xảy ra lỗi khi tải lịch sử");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Mỗi lần mở lịch sử đều reload dữ liệu từ backend
+  const handleToggleHistory = async () => {
+    const willShow = !historyVisible;
+    setHistoryVisible(willShow);
+    if (willShow) {
+      await fetchHistory();
+    }
   };
 
   // ========= GỌI API =========
@@ -118,7 +150,6 @@ function App() {
     let vCountNum;
     let popSize, maxGen, cross, mut;
 
-    // 1. Đọc & kiểm tra các tham số cấu hình
     try {
       vCountNum = parseNumber(vertexCount, "Số đỉnh (vertexCount)", {
         integer: true,
@@ -146,7 +177,6 @@ function App() {
       return;
     }
 
-    // 2. Parse dữ liệu cạnh & convert về dạng backend cần
     const { edges, error: edgesErr } = parseEdgesForBackend(
       edgesInput,
       vCountNum,
@@ -157,7 +187,6 @@ function App() {
       return;
     }
 
-    // 3. Tạo payload đúng như Postman
     const payload = {
       config: {
         populationSize: popSize,
@@ -173,41 +202,37 @@ function App() {
 
     console.log("PAYLOAD GỬI LÊN:", payload);
 
-    // 4. Gọi API backend
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:7000/api/run-ga", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const data = await runGa(payload);
 
-      if (!response.ok) {
-        const text = await response.text();
-        console.error("API ERROR:", response.status, text);
-        setError(
-          `API trả về lỗi ${response.status}. Chi tiết: ${
-            text || "Không có nội dung"
-          }`
-        );
-        return;
-      }
+      // Backend có thể trả MSTResult thuần hoặc { runId, result }
+      const mstResult = data.result || data;
+      setResult(mstResult);
+      setLastRunId(data.runId ?? null);
 
-      const data = await response.json();
       console.log("API RESULT:", data);
-      setResult(data);
+
+      // Nếu đang mở bảng lịch sử thì refresh luôn
+      if (historyVisible) {
+        await fetchHistory();
+      }
     } catch (err) {
-      console.error("NETWORK ERROR:", err);
-      setError(`Không kết nối được tới backend: ${err.message}`);
+      console.error("API ERROR:", err);
+      setError(
+        `Không gọi được API /api/run-ga: ${err.message || "Unknown error"}`
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // ========= CHUẨN BỊ DỮ LIỆU HIỂN THỊ =========
-  // BE luôn trả edges dạng 0-based; nếu người dùng chọn 1-based thì cộng thêm 1 khi hiển thị
+  // ========= DỮ LIỆU HIỂN THỊ =========
+  const mstEdgesRaw = result?.edges || []; // 0-based từ backend
+
+  // Dùng cho bảng hiển thị (tuỳ theo cách đánh số mà cộng thêm 1)
   const mstEdgesDisplay =
-    result?.edges?.map((e) =>
+    mstEdgesRaw.map((e) =>
       indexing === "zero"
         ? e
         : { u: e.u + 1, v: e.v + 1, weight: e.weight }
@@ -230,7 +255,7 @@ function App() {
 
         {/* LAYOUT 2 CỘT */}
         <div className="grid">
-          {/* CỘT TRÁI: cấu hình + dữ liệu cạnh */}
+          {/* CỘT TRÁI */}
           <section className="panel">
             <h2 className="panel-title">Cấu hình GA</h2>
 
@@ -277,7 +302,7 @@ function App() {
               </div>
             </div>
 
-            {/* Chọn kiểu đánh số đỉnh */}
+            {/* ĐÁNH SỐ ĐỈNH */}
             <div className="field" style={{ marginTop: "8px" }}>
               <label>Đánh số đỉnh từ</label>
               <div style={{ display: "flex", gap: "12px", fontSize: "13px" }}>
@@ -288,7 +313,7 @@ function App() {
                     checked={indexing === "zero"}
                     onChange={(e) => setIndexing(e.target.value)}
                   />
-                  0 (0, 1, 2, …, vertexCount - 1)
+                  0 (0, 1, …, vertexCount - 1)
                 </label>
                 <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <input
@@ -325,7 +350,7 @@ function App() {
             </button>
           </section>
 
-          {/* CỘT PHẢI: kết quả */}
+          {/* CỘT PHẢI */}
           <section className="panel panel-right">
             <h2 className="panel-title">Kết quả</h2>
 
@@ -338,7 +363,6 @@ function App() {
 
             {result && (
               <>
-                {/* THỐNG KÊ CHUNG */}
                 <div className="stats-row">
                   <div className="stat-card">
                     <span className="stat-label">Tổng trọng số MST</span>
@@ -349,7 +373,7 @@ function App() {
                   <div className="stat-card">
                     <span className="stat-label">Số cạnh MST</span>
                     <span className="stat-value">
-                      {result.edgeCount ?? mstEdgesDisplay.length ?? "---"}
+                      {result.edgeCount ?? mstEdgesRaw.length ?? "---"}
                     </span>
                   </div>
                   <div className="stat-card">
@@ -358,9 +382,15 @@ function App() {
                       {result.generations ?? "---"}
                     </span>
                   </div>
+                  {lastRunId != null && (
+                    <div className="stat-card">
+                      <span className="stat-label">ID lần chạy gần nhất</span>
+                      <span className="stat-value">{lastRunId}</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* BẢNG CẠNH */}
+                {/* BẢNG CẠNH MST */}
                 <div className="table-wrapper">
                   <div className="table-header">
                     <h3>Các cạnh thuộc cây khung nhỏ nhất</h3>
@@ -389,8 +419,85 @@ function App() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* SƠ ĐỒ CÂY KHUNG */}
+                <MstGraph vertexCount={vertexCount} edges={mstEdgesRaw} />
               </>
             )}
+
+            {/* LỊCH SỬ */}
+            <div className="history-section">
+              <div className="history-header">
+                <h2 className="panel-title panel-title--margin">
+                  Lịch sử chạy thuật toán
+                </h2>
+                <button
+                  className="secondary-btn"
+                  type="button"
+                  onClick={handleToggleHistory}
+                >
+                  {historyVisible ? "Ẩn lịch sử" : "Xem lịch sử"}
+                </button>
+              </div>
+
+              {historyVisible && (
+                <div className="table-wrapper">
+                  {historyLoading && <p>Đang tải lịch sử...</p>}
+                  {historyError && (
+                    <p style={{ color: "#ff9999", fontSize: 14 }}>
+                      Lỗi: {historyError}
+                    </p>
+                  )}
+                  {!historyLoading && !historyError && history.length === 0 && (
+                    <p className="placeholder">Chưa có lần chạy nào.</p>
+                  )}
+
+                  {!historyLoading && !historyError && history.length > 0 && (
+                    <>
+                      <div className="table-header">
+                        <h3>Danh sách các lần chạy</h3>
+                        <span className="table-badge">
+                          {history.length} lần
+                        </span>
+                      </div>
+                      <table className="mst-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>ID</th>
+                            <th>Thời gian</th>
+                            <th>Số đỉnh</th>
+                            <th>Số cạnh</th>
+                            <th>Tổng trọng số</th>
+                            <th>Số thế hệ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {history.map((run, index) => {
+                            const vCount = run.graph?.vertexCount ?? 0;
+                            const eCount = run.graph?.edges?.length ?? 0;
+                            const totalW = run.result?.totalWeight ?? 0;
+                            const gens = run.result?.generations ?? 0;
+
+                            return (
+                              <tr key={run.id}>
+                                <td>{index + 1}</td>
+                                <td>{run.id}</td>
+                                <td>{run.createdAt}</td>
+                                <td>{vCount}</td>
+                                <td>{eCount}</td>
+                                <td>{totalW}</td>
+                                <td>{gens}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </section>
         </div>
       </div>
