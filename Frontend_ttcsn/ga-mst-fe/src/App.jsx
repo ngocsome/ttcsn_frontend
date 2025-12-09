@@ -2,19 +2,29 @@ import { useState } from "react";
 import "./App.css";
 import { runGa, getHistory } from "./services/gaService";
 import MstGraph from "./MstGraph";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 function App() {
-  // Cấu hình GA
+  // ====== CẤU HÌNH GA ======
   const [populationSize, setPopulationSize] = useState("50");
   const [maxGenerations, setMaxGenerations] = useState("200");
   const [crossoverRate, setCrossoverRate] = useState("0.8");
   const [mutationRate, setMutationRate] = useState("0.1");
   const [vertexCount, setVertexCount] = useState("5");
 
-  // Đánh số đỉnh: 0-based hay 1-based
+  // Đánh số đỉnh: 0-based hay 1-based (chỉ ảnh hưởng hiển thị & input)
   const [indexing, setIndexing] = useState("zero"); // "zero" | "one"
 
-  // Dữ liệu cạnh
+  // Dữ liệu cạnh nhập từ textarea
   const [edgesInput, setEdgesInput] = useState(
     `0 1 2
 0 2 3
@@ -24,19 +34,22 @@ function App() {
 3 4 2`
   );
 
-  // Kết quả + lỗi
+  // Kết quả & trạng thái
   const [result, setResult] = useState(null);
   const [lastRunId, setLastRunId] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Lịch sử chạy thuật toán
+  // Lịch sử chạy (bảng bên dưới)
   const [historyVisible, setHistoryVisible] = useState(false);
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState("");
 
-  // ========= HÀM TIỆN ÍCH =========
+  // Dữ liệu cho biểu đồ thời gian (theo từng lần chạy)
+  const [timeSeries, setTimeSeries] = useState([]);
+
+  // ====== TIỆN ÍCH PARSE SỐ ======
   const parseNumber = (value, fieldName, options = {}) => {
     const normalized = String(value).replace(",", ".").trim();
     if (normalized === "") {
@@ -58,7 +71,7 @@ function App() {
     return num;
   };
 
-  // Parse dữ liệu cạnh
+  // ====== PARSE DỮ LIỆU CẠNH TỪ TEXTAREA ======
   const parseEdgesForBackend = (text, vCount, indexingMode) => {
     const lines = text
       .split("\n")
@@ -118,7 +131,7 @@ function App() {
     return { edges: edgesForBackend, error: null };
   };
 
-  // ========= LỊCH SỬ =========
+  // ====== LỊCH SỬ CHẠY (BẢNG) ======
   const fetchHistory = async () => {
     try {
       setHistoryLoading(true);
@@ -133,7 +146,6 @@ function App() {
     }
   };
 
-  // Mỗi lần mở lịch sử đều reload dữ liệu từ backend
   const handleToggleHistory = async () => {
     const willShow = !historyVisible;
     setHistoryVisible(willShow);
@@ -142,7 +154,7 @@ function App() {
     }
   };
 
-  // ========= GỌI API =========
+  // ====== GỌI API CHẠY GA ======
   const handleRunClick = async () => {
     setError("");
     setResult(null);
@@ -211,9 +223,20 @@ function App() {
       setResult(mstResult);
       setLastRunId(data.runId ?? null);
 
+      // Cập nhật cho biểu đồ thời gian thực hiện
+      setTimeSeries((prev) => [
+        ...prev,
+        {
+          runIndex: prev.length + 1,
+          executionTimeMs: mstResult.executionTimeMs ?? 0,
+          vertexCount: vCountNum,
+          edgeCount: edges.length,
+        },
+      ]);
+
       console.log("API RESULT:", data);
 
-      // Nếu đang mở bảng lịch sử thì refresh luôn
+      // Nếu đang mở lịch sử thì reload
       if (historyVisible) {
         await fetchHistory();
       }
@@ -227,17 +250,32 @@ function App() {
     }
   };
 
-  // ========= DỮ LIỆU HIỂN THỊ =========
-  const mstEdgesRaw = result?.edges || []; // 0-based từ backend
+  // ====== DỮ LIỆU HIỂN THỊ KẾT QUẢ ======
+  const mstEdgesRaw = result?.edges || [];
 
-  // Dùng cho bảng hiển thị (tuỳ theo cách đánh số mà cộng thêm 1)
-  const mstEdgesDisplay =
-    mstEdgesRaw.map((e) =>
-      indexing === "zero"
-        ? e
-        : { u: e.u + 1, v: e.v + 1, weight: e.weight }
-    ) || [];
+  // Hiển thị theo chế độ đánh số
+  const mstEdgesDisplay = mstEdgesRaw.map((e) =>
+    indexing === "zero"
+      ? e
+      : { u: e.u + 1, v: e.v + 1, weight: e.weight }
+  );
 
+  // Dữ liệu cho biểu đồ hội tụ (dùng bestFitnessHistory & avgFitnessHistory từ backend)
+  const convergenceData =
+    result?.bestFitnessHistory && Array.isArray(result.bestFitnessHistory)
+      ? result.bestFitnessHistory.map((best, index) => ({
+          generation: index + 1,
+          best,
+          avg: result.avgFitnessHistory?.[index] ?? null,
+        }))
+      : [];
+
+  const hasAvgSeries =
+    result?.avgFitnessHistory &&
+    Array.isArray(result.avgFitnessHistory) &&
+    result.avgFitnessHistory.length > 0;
+
+  // ====== RENDER ======
   return (
     <div className="page">
       <div className="shell">
@@ -255,7 +293,7 @@ function App() {
 
         {/* LAYOUT 2 CỘT */}
         <div className="grid">
-          {/* CỘT TRÁI */}
+          {/* ==== CỘT TRÁI: CẤU HÌNH + BIỂU ĐỒ ==== */}
           <section className="panel">
             <h2 className="panel-title">Cấu hình GA</h2>
 
@@ -348,9 +386,86 @@ function App() {
             >
               {loading ? "Đang chạy thuật toán..." : "Chạy thuật toán"}
             </button>
+
+            {/* ==== 2 BIỂU ĐỒ ĐƯỢC CHUYỂN SANG CỘT TRÁI ==== */}
+            {result && (
+              <div className="charts-grid">
+                {/* Biểu đồ hội tụ */}
+                <div className="chart-card">
+                  <div className="table-header">
+                    <h3>Biểu đồ hội tụ</h3>
+                    <span className="table-badge">
+                      {convergenceData.length} thế hệ
+                    </span>
+                  </div>
+                  {convergenceData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <LineChart data={convergenceData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="generation" />
+                        <YAxis />
+                        <Tooltip />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="best"
+                          name="Best cost"
+                          dot={false}
+                        />
+                        {hasAvgSeries && (
+                          <Line
+                            type="monotone"
+                            dataKey="avg"
+                            name="Avg cost"
+                            dot={false}
+                            strokeDasharray="4 4"
+                          />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="chart-placeholder">
+                      Backend chưa trả về dữ liệu history để vẽ biểu đồ
+                      hội tụ.
+                    </p>
+                  )}
+                </div>
+
+                {/* Biểu đồ thời gian thực hiện */}
+                <div className="chart-card">
+                  <div className="table-header">
+                    <h3>Biểu đồ thời gian thực hiện</h3>
+                    <span className="table-badge">
+                      {timeSeries.length} lần chạy
+                    </span>
+                  </div>
+                  {timeSeries.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <LineChart data={timeSeries}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="runIndex" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line
+                          type="monotone"
+                          dataKey="executionTimeMs"
+                          name="Thời gian (ms)"
+                          dot
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="chart-placeholder">
+                      Chưa có dữ liệu thời gian. Hãy chạy thuật toán ít nhất
+                      1 lần.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
 
-          {/* CỘT PHẢI */}
+          {/* ==== CỘT PHẢI: KẾT QUẢ, BẢNG, SƠ ĐỒ, LỊCH SỬ ==== */}
           <section className="panel panel-right">
             <h2 className="panel-title">Kết quả</h2>
 
@@ -363,6 +478,7 @@ function App() {
 
             {result && (
               <>
+                {/* Thống kê nhanh */}
                 <div className="stats-row">
                   <div className="stat-card">
                     <span className="stat-label">Tổng trọng số MST</span>
@@ -388,9 +504,17 @@ function App() {
                       <span className="stat-value">{lastRunId}</span>
                     </div>
                   )}
+                  {result.executionTimeMs != null && (
+                    <div className="stat-card">
+                      <span className="stat-label">Thời gian thực hiện</span>
+                      <span className="stat-value">
+                        {result.executionTimeMs.toFixed(3)} ms
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {/* BẢNG CẠNH MST */}
+                {/* Bảng cạnh MST */}
                 <div className="table-wrapper">
                   <div className="table-header">
                     <h3>Các cạnh thuộc cây khung nhỏ nhất</h3>
@@ -420,12 +544,12 @@ function App() {
                   </table>
                 </div>
 
-                {/* SƠ ĐỒ CÂY KHUNG */}
+                {/* Sơ đồ cây khung nhỏ nhất */}
                 <MstGraph vertexCount={vertexCount} edges={mstEdgesRaw} />
               </>
             )}
 
-            {/* LỊCH SỬ */}
+            {/* LỊCH SỬ CHẠY THUẬT TOÁN */}
             <div className="history-section">
               <div className="history-header">
                 <h2 className="panel-title panel-title--margin">
