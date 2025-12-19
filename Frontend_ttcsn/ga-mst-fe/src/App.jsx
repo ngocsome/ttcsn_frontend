@@ -387,7 +387,7 @@ function App() {
               {loading ? "Đang chạy thuật toán..." : "Chạy thuật toán"}
             </button>
 
-            {/* ==== 2 BIỂU ĐỒ ĐƯỢC CHUYỂN SANG CỘT TRÁI ==== */}
+            {/* ==== 2 BIỂU ĐỒ (xếp dọc + to hơn) ==== */}
             {result && (
               <div className="charts-grid">
                 {/* Biểu đồ hội tụ */}
@@ -398,12 +398,16 @@ function App() {
                       {convergenceData.length} thế hệ
                     </span>
                   </div>
+
                   {convergenceData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={220}>
-                      <LineChart data={convergenceData}>
+                    <ResponsiveContainer width="100%" height={340}>
+                      <LineChart
+                        data={convergenceData}
+                        margin={{ top: 10, right: 16, left: 4, bottom: 6 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="generation" />
-                        <YAxis />
+                        <XAxis dataKey="generation" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip />
                         <Legend />
                         <Line
@@ -425,8 +429,7 @@ function App() {
                     </ResponsiveContainer>
                   ) : (
                     <p className="chart-placeholder">
-                      Backend chưa trả về dữ liệu history để vẽ biểu đồ
-                      hội tụ.
+                      Backend chưa trả về dữ liệu history để vẽ biểu đồ hội tụ.
                     </p>
                   )}
                 </div>
@@ -439,25 +442,29 @@ function App() {
                       {timeSeries.length} lần chạy
                     </span>
                   </div>
+
                   {timeSeries.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={220}>
-                      <LineChart data={timeSeries}>
+                    <ResponsiveContainer width="100%" height={340}>
+                      <LineChart
+                        data={timeSeries}
+                        margin={{ top: 10, right: 16, left: 4, bottom: 6 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="runIndex" />
-                        <YAxis />
+                        <XAxis dataKey="runIndex" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
                         <Tooltip />
                         <Line
                           type="monotone"
                           dataKey="executionTimeMs"
                           name="Thời gian (ms)"
-                          dot
+                          dot={false}
                         />
                       </LineChart>
                     </ResponsiveContainer>
                   ) : (
                     <p className="chart-placeholder">
-                      Chưa có dữ liệu thời gian. Hãy chạy thuật toán ít nhất
-                      1 lần.
+                      Chưa có dữ liệu thời gian. Hãy chạy thuật toán ít nhất 1
+                      lần.
                     </p>
                   )}
                 </div>
@@ -471,8 +478,8 @@ function App() {
 
             {!result && !loading && (
               <p className="placeholder">
-                Nhấn <strong>“Chạy thuật toán”</strong> để xem kết quả cây
-                khung nhỏ nhất.
+                Nhấn <strong>“Chạy thuật toán”</strong> để xem kết quả cây khung
+                nhỏ nhất.
               </p>
             )}
 

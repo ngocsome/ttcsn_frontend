@@ -1,17 +1,20 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
+/* ================== BIẾN MÀU (LIGHT THEME) ================== */
 :root {
-  --bg-body: #0a0e27;
-  --bg-shell: #0a0e27;
-  --bg-panel: #0a0e27;
-  --border-subtle: rgba(148, 163, 184, 0.15);
-  --accent: #00d9ff;
-  --accent-soft: rgba(0, 217, 255, 0.1);
-  --accent-strong: #0ea5e9;
-  --text-main: #f0f4f8;
-  --text-muted: #a0aec0;
-  --text-soft: #718096;
-  --danger: #ff6b6b;
+  --bg-body: #e5edf7;
+  --bg-shell: #ffffff;
+  --bg-panel: #ffffff;
+
+  --border-subtle: rgba(148, 163, 184, 0.5);
+  --accent: #0ea5e9;
+  --accent-soft: rgba(14, 165, 233, 0.08);
+  --accent-strong: #0284c7;
+
+  --text-main: #0f172a;
+  --text-muted: #6b7280;
+  --text-soft: #9ca3af;
+  --danger: #ef4444;
   --radius-xl: 24px;
 }
 
@@ -30,12 +33,19 @@ body,
   height: 100%;
 }
 
+/* BODY */
 body {
-  font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+  font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  background: radial-gradient(
+    circle at top,
+    #ffffff 0%,
+    #e5edf7 40%,
+    #dbeafe 100%
+  );
   color: var(--text-main);
   line-height: 1.6;
-  font-size: 18px; /* NEW: tăng base font từ ~16 lên 18px */
+  font-size: 20px;
 }
 
 /* PAGE */
@@ -48,12 +58,12 @@ body {
 .shell {
   width: min(2500px, 100vw);
   margin: 0 auto;
-  background: linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(15, 20, 45, 0.95) 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f3f4ff 100%);
   border-radius: 32px;
   padding: 40px 48px;
   border: 1px solid var(--border-subtle);
-  box-shadow: 0 0 60px rgba(0, 217, 255, 0.08), 0 25px 50px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(12px);
 }
 
 /* HEADER */
@@ -64,15 +74,15 @@ body {
   gap: 24px;
   margin-bottom: 28px;
   padding-bottom: 24px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
 }
 
 .header h1 {
   margin: 0 0 8px;
-  font-size: 48px; /* increased from 42px to 48px */
+  font-size: 48px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #f0f4f8 0%, #a0aec0 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #4b5563 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -80,25 +90,25 @@ body {
 
 .header p {
   margin: 0;
-  font-size: 18px; /* increased from 16px to 18px */
+  font-size: 18px;
   color: var(--text-muted);
   font-weight: 400;
 }
 
 .highlight {
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 600;
 }
 
 .badge {
   padding: 8px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 217, 255, 0.3);
-  font-size: 14px; /* increased from 13px to 14px */
+  border: 1px solid rgba(14, 165, 233, 0.5);
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--accent);
-  background: rgba(0, 217, 255, 0.05);
+  color: var(--accent-strong);
+  background: rgba(14, 165, 233, 0.08);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -133,7 +143,7 @@ body {
   }
 
   .header h1 {
-    font-size: 28px; /* increased from 24px to 28px cho mobile */
+    font-size: 28px;
   }
 
   .grid {
@@ -144,7 +154,7 @@ body {
 
 /* PANEL */
 .panel {
-  background: linear-gradient(135deg, rgba(10, 14, 39, 0.8) 0%, rgba(20, 25, 50, 0.6) 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f3f4ff 100%);
   border-radius: var(--radius-xl);
   padding: 24px;
   border: 1px solid var(--border-subtle);
@@ -157,8 +167,12 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 0% 0%, rgba(0, 217, 255, 0.08), transparent 60%);
-  opacity: 0.6;
+  background: radial-gradient(
+    circle at 0% 0%,
+    rgba(14, 165, 233, 0.12),
+    transparent 60%
+  );
+  opacity: 1;
   pointer-events: none;
 }
 
@@ -174,7 +188,7 @@ body {
 
 /* TITLES */
 .panel-title {
-  font-size: 22px; /* increased from 20px to 22px */
+  font-size: 22px;
   font-weight: 600;
   margin: 0 0 16px;
   display: inline-flex;
@@ -189,7 +203,7 @@ body {
   height: 8px;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-  box-shadow: 0 0 12px rgba(0, 217, 255, 0.5);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.6);
 }
 
 .panel-title--margin {
@@ -209,11 +223,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 18px; /* increased from 16px to 18px */
+  font-size: 18px;
 }
 
 .field label {
-  font-size: 15px; /* increased from 14px to 15px */
+  font-size: 15px;
   color: var(--text-muted);
   font-weight: 500;
   text-transform: uppercase;
@@ -221,11 +235,11 @@ body {
 }
 
 .field input {
-  background: rgba(15, 20, 45, 0.7);
+  background: #f9fafb;
   border-radius: 12px;
   border: 1px solid var(--border-subtle);
-  padding: 12px 14px; /* slightly tăng padding */
-  font-size: 18px; /* increased from 16px to 18px */
+  padding: 12px 14px;
+  font-size: 18px;
   color: var(--text-main);
   outline: none;
   transition: all 0.2s ease;
@@ -233,42 +247,43 @@ body {
 }
 
 .field input:hover {
-  border-color: rgba(0, 217, 255, 0.2);
-  background: rgba(15, 20, 45, 0.85);
+  border-color: rgba(14, 165, 233, 0.4);
+  background: #ffffff;
 }
 
 .field input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.15);
-  background: rgba(15, 20, 45, 0.95);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+  background: #ffffff;
 }
 
 /* HINT */
 .hint {
   margin: 0 0 6px;
-  font-size: 16px; /* increased from 14px to 16px */
+  font-size: 16px;
   color: var(--text-soft);
 }
 
 .hint code {
-  font-size: 15px; /* increased from 13px to 15px */
-  background: rgba(0, 217, 255, 0.08);
+  font-size: 15px;
+  background: rgba(14, 165, 233, 0.08);
   padding: 3px 8px;
   border-radius: 6px;
-  border: 1px solid rgba(0, 217, 255, 0.15);
-  color: var(--accent);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  color: var(--accent-strong);
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+/* TEXTAREA CẠNH */
 .edges-input {
   width: 100%;
   min-height: 180px;
   resize: vertical;
   border-radius: 14px;
   border: 1px solid var(--border-subtle);
-  background: rgba(15, 20, 45, 0.7);
+  background: #f9fafb;
   padding: 14px 16px;
-  font-size: 17px; /* increased from 15px to 17px */
+  font-size: 17px;
   color: var(--text-main);
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   line-height: 1.6;
@@ -278,14 +293,14 @@ body {
 }
 
 .edges-input:hover {
-  border-color: rgba(0, 217, 255, 0.2);
-  background: rgba(15, 20, 45, 0.85);
+  border-color: rgba(14, 165, 233, 0.4);
+  background: #ffffff;
 }
 
 .edges-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(0, 217, 255, 0.15);
-  background: rgba(15, 20, 45, 0.95);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+  background: #ffffff;
 }
 
 /* NÚT CHẠY */
@@ -295,20 +310,20 @@ body {
   border-radius: 999px;
   border: 1px solid transparent;
   padding: 14px 26px;
-  font-size: 18px; /* increased from 17px to 18px */
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
-  background: linear-gradient(135deg, #00d9ff 0%, #0ea5e9 100%);
-  color: #0a0e27;
-  box-shadow: 0 4px 20px rgba(0, 217, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #f9fafb;
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4);
   transition: all 0.2s ease;
 }
 
 .primary-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 217, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  background: linear-gradient(135deg, #00e6ff 0%, #18b9ff 100%);
+  box-shadow: 0 8px 26px rgba(37, 99, 235, 0.55);
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
 }
 
 .primary-btn:active:not(:disabled) {
@@ -322,7 +337,7 @@ body {
 
 /* THÔNG BÁO LỖI */
 .alert {
-  font-size: 16px; /* increased from 15px to 16px */
+  font-size: 16px;
   border-radius: 12px;
   padding: 10px 12px;
   margin-bottom: 12px;
@@ -330,15 +345,15 @@ body {
 }
 
 .alert.error {
-  background: rgba(255, 107, 107, 0.08);
-  border-color: rgba(255, 107, 107, 0.5);
-  color: #ff9999;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.8);
+  color: #b91c1c;
 }
 
 /* KẾT QUẢ */
 .placeholder {
   margin-top: 8px;
-  font-size: 16px; /* increased from 15px to 16px */
+  font-size: 16px;
   color: var(--text-soft);
 }
 
@@ -351,7 +366,7 @@ body {
 }
 
 .stat-card {
-  background: linear-gradient(135deg, rgba(10, 14, 39, 0.9) 0%, rgba(20, 25, 50, 0.7) 100%);
+  background: #f9fafb;
   border-radius: 14px;
   padding: 12px 14px;
   border: 1px solid var(--border-subtle);
@@ -362,12 +377,12 @@ body {
 }
 
 .stat-card:hover {
-  border-color: rgba(0, 217, 255, 0.3);
-  background: linear-gradient(135deg, rgba(10, 14, 39, 1) 0%, rgba(20, 25, 50, 0.85) 100%);
+  border-color: rgba(14, 165, 233, 0.5);
+  background: #ffffff;
 }
 
 .stat-label {
-  font-size: 14px; /* increased from 13px to 14px */
+  font-size: 14px;
   color: var(--text-soft);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -375,7 +390,7 @@ body {
 }
 
 .stat-value {
-  font-size: 24px; /* increased from 23px to 24px */
+  font-size: 24px;
   font-weight: 700;
   background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   -webkit-background-clip: text;
@@ -386,7 +401,7 @@ body {
 /* BẢNG */
 .table-wrapper {
   margin-top: 8px;
-  background: rgba(15, 20, 45, 0.6);
+  background: #f9fafb;
   border-radius: 16px;
   border: 1px solid var(--border-subtle);
   padding: 12px;
@@ -402,29 +417,29 @@ body {
 
 .table-header h3 {
   margin: 0;
-  font-size: 18px; /* increased from 16px to 18px */
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-main);
 }
 
 .table-badge {
-  font-size: 14px; /* increased from 13px to 14px */
+  font-size: 14px;
   padding: 4px 10px;
   border-radius: 999px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-strong);
   font-weight: 500;
-  border: 1px solid rgba(0, 217, 255, 0.2);
+  border: 1px solid rgba(14, 165, 233, 0.4);
 }
 
 .mst-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 15px; /* increased from 14px to 15px */
+  font-size: 15px;
 }
 
 .mst-table thead tr {
-  background: rgba(10, 14, 39, 0.8);
+  background: #e5edf7;
 }
 
 .mst-table th,
@@ -439,18 +454,18 @@ body {
   border-bottom: 1px solid var(--border-subtle);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 14px; /* increased from 13px to 14px */
+  font-size: 14px;
 }
 
 .mst-table tbody tr {
-  background: rgba(15, 20, 45, 0.5);
+  background: #ffffff;
   border-bottom: 1px solid var(--border-subtle);
   transition: all 0.2s ease;
 }
 
 .mst-table tbody tr:hover {
-  background: rgba(0, 217, 255, 0.08);
-  border-bottom-color: rgba(0, 217, 255, 0.2);
+  background: #e0f2fe;
+  border-bottom-color: rgba(14, 165, 233, 0.4);
 }
 
 /* LỊCH SỬ CHẠY THUẬT TOÁN */
@@ -468,10 +483,10 @@ body {
 .secondary-btn {
   padding: 10px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 217, 255, 0.6);
-  background: transparent;
-  color: var(--accent);
-  font-size: 14px; /* increased from 13px to 14px */
+  border: 1px solid rgba(14, 165, 233, 0.8);
+  background: #ffffff;
+  color: var(--accent-strong);
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -480,34 +495,57 @@ body {
 }
 
 .secondary-btn:hover {
-  background: rgba(0, 217, 255, 0.08);
-  box-shadow: 0 0 12px rgba(0, 217, 255, 0.4);
+  background: #e0f2fe;
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
 }
-/* BIỂU ĐỒ HỘI TỤ & THỜI GIAN */
+
+/* ================== BIỂU ĐỒ HỘI TỤ & THỜI GIAN (ĐẸP + TO + XẾP DỌC) ================== */
 .charts-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: 8px 0 18px;
+  display: flex;
+  flex-direction: column; /* ✅ xếp dọc */
+  gap: 18px;
+  margin: 14px 0 18px;
 }
 
 .chart-card {
-  background: rgba(15, 20, 45, 0.7);
-  border-radius: 16px;
-  border: 1px solid var(--border-subtle);
-  padding: 10px 12px 6px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  padding: 14px 16px 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.chart-card .table-header {
+  margin-bottom: 10px;
+}
+
+.chart-card .table-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.chart-card .table-badge {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+/* Tăng độ dễ đọc cho chữ trong Recharts */
+.chart-card .recharts-text,
+.chart-card .recharts-legend-item-text,
+.chart-card .recharts-tooltip-label {
+  font-size: 13px;
 }
 
 .chart-placeholder {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-soft);
-  padding: 6px 2px 10px;
+  padding: 10px 2px 6px;
 }
 
 /* SƠ ĐỒ CÂY KHUNG (MstGraph) */
 .mst-graph-card {
   margin-top: 16px;
-  background: rgba(15, 20, 45, 0.7);
+  background: #f9fafb;
   border-radius: 16px;
   border: 1px solid var(--border-subtle);
   padding: 12px;
@@ -520,8 +558,9 @@ body {
   margin: 0 auto;
 }
 
+/* MOBILE CHO BIỂU ĐỒ */
 @media (max-width: 960px) {
   .charts-grid {
-    grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
